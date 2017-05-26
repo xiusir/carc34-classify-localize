@@ -140,6 +140,47 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
 
   return images, tf.reshape(label_batch, [batch_size])
 
+def _generate_image_and_label_and_key_batch(image, label, key,
+                                            min_queue_examples,
+                                            batch_size, shuffle):
+  """Construct a queued batch of images and labels.
+
+  Args:
+    image: 3-D Tensor of [height, width, 3] of type.float32.
+    label: 1-D Tensor of type.int32
+    min_queue_examples: int32, minimum number of samples to retain
+      in the queue that provides of batches of examples.
+    batch_size: Number of images per batch.
+    shuffle: boolean indicating whether to use a shuffling queue.
+
+  Returns:
+    images: Images. 4D tensor of [batch_size, height, width, 3] size.
+    labels: Labels. 1D tensor of [batch_size] size.
+  """
+  # Create a queue that shuffles the examples, and then
+  # read 'batch_size' images + labels from the example queue.
+  num_preprocess_threads = 16
+  if shuffle:
+    images, label_batch, keys = tf.train.shuffle_batch(
+        [image, label, key],
+        batch_size=batch_size,
+        num_threads=num_preprocess_threads,
+        capacity=min_queue_examples + 3 * batch_size,
+        min_after_dequeue=min_queue_examples)
+  else:
+    images, label_batch, keys = tf.train.batch(
+        [image, label, key],
+        batch_size=batch_size,
+        num_threads=num_preprocess_threads,
+        capacity=min_queue_examples + 3 * batch_size)
+
+  # Display the training images in the visualizer.
+  tf.summary.image('images', images)
+
+  return images, tf.reshape(label_batch, [batch_size]), tf.reshape(keys, [batch_size])
+
+
+
 
 def train_inputs(data_dir, batch_size):
   """Construct input for CARC training using the Reader ops.
@@ -215,6 +256,7 @@ def evaluate_inputs(eval_data, data_dir, batch_size):
   Returns:
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
+    keys: Keys. 1D tensor of [batch_size] size.
   """
   if not eval_data:
     label_file = 'label_for_train.dat'
@@ -258,6 +300,7 @@ def evaluate_inputs(eval_data, data_dir, batch_size):
                            min_fraction_of_examples_in_queue)
 
   # Generate a batch of images and labels by building up a queue of examples.
-  return _generate_image_and_label_batch(float_image, read_input.label,
+  return _generate_image_and_label_and_key_batch(float_image, read_input.label,
+                                         read_input.key,
                                          min_queue_examples, batch_size,
                                          shuffle=False)

@@ -181,13 +181,13 @@ def evaluate_inputs(eval_data):
   if not FLAGS.data_dir:
     raise ValueError('Please supply a data_dir')
   data_dir = FLAGS.data_dir
-  images, labels = carc19_input.evaluate_inputs(eval_data=eval_data,
+  images, labels, keys = carc19_input.evaluate_inputs(eval_data=eval_data,
                                         data_dir=data_dir,
                                         batch_size=FLAGS.batch_size)
   if FLAGS.use_fp16:
     images = tf.cast(images, tf.float16)
     labels = tf.cast(labels, tf.float16)
-  return images, labels
+  return images, labels, keys
 
 
 def inference(images):

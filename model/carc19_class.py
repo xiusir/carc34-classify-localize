@@ -1,0 +1,22 @@
+# -*- coding: utf-8 -*-
+
+CARC19_CLASS = [ 0 for i in range(19) ]
+CARC19_CLASS[0] = u"外观-左前"
+CARC19_CLASS[1] = u"外观-右前"
+CARC19_CLASS[2] = u"外观-正侧"
+CARC19_CLASS[3] = u"外观-正前"
+CARC19_CLASS[4] = u"外观-正后"
+CARC19_CLASS[5] = u"车灯"
+CARC19_CLASS[6] = u"轮胎"
+CARC19_CLASS[7] = u"车内顶棚"
+CARC19_CLASS[8] = u"车门"
+CARC19_CLASS[9] = u"密封胶条"
+CARC19_CLASS[10] = u"安全带根部"
+CARC19_CLASS[11] = u"内饰-前排"
+CARC19_CLASS[12] = u"内饰-后排"
+CARC19_CLASS[13] = u"内饰-中控"
+CARC19_CLASS[14] = u"仪表盘"
+CARC19_CLASS[15] = u"变速杆"
+CARC19_CLASS[16] = u"油门踏板"
+CARC19_CLASS[17] = u"发动机底盘"
+CARC19_CLASS[18] = u"后备箱"
