@@ -32,8 +32,8 @@ IMAGE_CHANNEL = 3
 
 # Global constants describing the CARC-19 data set.
 NUM_CLASSES = 19
-NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 30000
-NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 8000
+NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 250000
+NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 50000
 
 
 def read_carc19(filename_queue):
@@ -233,7 +233,7 @@ def train_inputs(data_dir, batch_size):
   ###import sys; sys.exit(0)
 
   # Ensure that the random shuffling has good mixing properties.
-  min_fraction_of_examples_in_queue = 0.2
+  min_fraction_of_examples_in_queue = 0.01
   min_queue_examples = int(NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN *
                            min_fraction_of_examples_in_queue)
   print ('Filling queue with %d CARC images before starting to train. '
@@ -295,7 +295,7 @@ def evaluate_inputs(eval_data, data_dir, batch_size):
   read_input.label.set_shape([1])
 
   # Ensure that the random shuffling has good mixing properties.
-  min_fraction_of_examples_in_queue = 0.1
+  min_fraction_of_examples_in_queue = 0.01
   min_queue_examples = int(num_examples_per_epoch *
                            min_fraction_of_examples_in_queue)
 
