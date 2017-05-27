@@ -20,22 +20,22 @@ Every example contains a image sized 256x256 and a text label.
  about 1,000 case
 
 # HowToRun
-* Install tensorflow with gpu support
-* Clone: git clone carc19....
-* SetWorkDir: 
-TFWORKDIR=/home/xxx/carc19_work/tmp  # your work dir
-mkdir -p $TFWORKDIR 
-* ExtractData: 
-cd carc19/dataset/small3k 
-tar zxf image.tar.gz ;    # about 800MB
-mv carc19/dataset/small3k $TFWORKDIR/carc19
-* Change:
-cd carc19/model
-modify carc19.py: tf.app.flags.DEFINE_string('tf_home', '/home/xxx/carc19_work/tmp', ... 
-* Train:
-python carc19_train.py   # run about 2hours
-* Evaluate:
-python carc19_eval.py    # evaluate for precision
+*   Install tensorflow with gpu support
+*   Clone: git clone carc19....
+*   SetWorkDir: 
+    > TFWORKDIR=/home/xxx/carc19_work/tmp  # your work dir
+    > mkdir -p $TFWORKDIR 
+*   ExtractData: 
+    > cd carc19/dataset/small3k 
+    > tar zxf image.tar.gz ;    # about 800MB
+    > mv carc19/dataset/small3k $TFWORKDIR/carc19
+*   Change working dir:
+    > cd carc19/model
+    > modify carc19.py: tf.app.flags.DEFINE_string('tf_home', '/home/xxx/carc19_work/tmp', ... 
+*   Train:
+    > python carc19_train.py   # run about 2hours
+*   Evaluate:
+    > python carc19_eval.py    # evaluate for precision
 
 # Reference
   https://www.tensorflow.org/tutorials/deep_cnn
