@@ -15,7 +15,7 @@ Every example contains a image sized 256x256 and a text label.
 
 ## small3k
 ### train - label_for_train.dat
- about 3,000 case
+ about 2,000 case
 ### test - label_for_test.dat
  about 1,000 case
 
