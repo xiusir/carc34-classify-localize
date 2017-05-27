@@ -2,7 +2,7 @@
 Image classifier based on cifar10, the sample model from the official tutorial of tensorflow. 
 Images about a car outside or inside and from different angles with 19 target classes.
 
-#Benchmark
+# Benchmark
 There are two datasets in project.
 Every example contains a image sized 256x256 and a text label.
 
@@ -19,7 +19,7 @@ Every example contains a image sized 256x256 and a text label.
 ### test - label_for_test.dat
  about 1,000 case
 
-#HowToRun
+# HowToRun
 * Install tensorflow with gpu support
 * Clone: git clone carc19....
 * SetWorkDir: 
@@ -37,7 +37,7 @@ Every example contains a image sized 256x256 and a text label.
 * Evaluate:
     python carc19_eval.py    # evaluate for precision
 
-#Reference:
+# Reference:
   https://www.tensorflow.org/tutorials/deep_cnn
 
 My email: xiusir#qq.com
