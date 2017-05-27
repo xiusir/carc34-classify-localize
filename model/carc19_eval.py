@@ -47,11 +47,11 @@ from carc19_class import CARC19_CLASS
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('eval_dir', '/home/xiusir/WorkShop/TensorFlow/MyFirstModel/tmp/carc19_eval',
+tf.app.flags.DEFINE_string('eval_dir', '%s/tmp/carc19_eval' % FLAGS.tf_home,
                            """Directory where to write event logs.""")
-tf.app.flags.DEFINE_string('eval_data', 'train_eval',
+tf.app.flags.DEFINE_string('eval_data', 'test',
                            """Either 'test' or 'train_eval'.""")
-tf.app.flags.DEFINE_string('checkpoint_dir', '/home/xiusir/WorkShop/TensorFlow/MyFirstModel/tmp/carc19_train',
+tf.app.flags.DEFINE_string('checkpoint_dir', '%s/tmp/carc19_train' % FLAGS.tf_home,
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
                             """How often to run the eval.""")
@@ -240,8 +240,8 @@ def main(argv=None):  # pylint: disable=unused-argument
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
-  #evaluate()
-  analyze()
+  evaluate()
+  #analyze()
 
 
 if __name__ == '__main__':

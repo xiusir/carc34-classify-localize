@@ -48,9 +48,20 @@ import carc19_input
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
+# TODO tf_home must be changed to be your tensorflow working dir. Structure like:
+# ex. ${tf_home}/tmp/carc19/{label_for_test.dat,label_for_train.dat,image/...}
+# tf_home = /home/work/tensorflow
+# mkdir -p /home/work/tensorflow/tmp
+# mv small4w /home/work/tensorflow/tmp/carc19   
+# OR mv big34w /home/work/tensorflow/tmp/carc19
+# cd ???/carc19/model
+# python carc19_train.py
+tf.app.flags.DEFINE_string('tf_home', '/home/xiusir/WorkShop/TensorFlow/MyFirstModel',
+                           """Basic path containing working directories, """
+                           """as data_dir, eval_dir, checkpoint_dir, train_dir""")
 tf.app.flags.DEFINE_integer('batch_size', 32,
                             """Number of images to process in a batch.""")
-tf.app.flags.DEFINE_string('data_dir', '/home/xiusir/WorkShop/TensorFlow/MyFirstModel/tmp/carc19/',
+tf.app.flags.DEFINE_string('data_dir', '%s/tmp/carc19/' % FLAGS.tf_home,
                            """Path to the CARC-19 data directory.""")
 tf.app.flags.DEFINE_boolean('use_fp16', False,
                             """Train the model using fp16.""")
