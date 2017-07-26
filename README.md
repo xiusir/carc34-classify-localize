@@ -1,43 +1,74 @@
-# CARC19
-Image classifier based on cifar10, the sample model from the official tutorial of tensorflow. 
-Images about a car outside or inside and from different angles with 19 target classes.
+# CARC34
+Image classify and localize model based on cifar10, the sample model from the official tutorial of tensorflow. 
 
-# Benchmark
-There are two datasets in project.
+Because all images were taken according to a very strict specification, the performance of this simple model is very good.
+
+# Classification
+Images about a car outside or inside and from different angles with 34 target classes.
+
+@see classify directory
+
+## Model
+4 conv layer and 2 fully connected layer.
+
+Inputs of trainning is (image[256,256,3], label_id[1]).
+
+The target of prediction is a float vector [34], the index number of biggest value in this vector is the predict class id.
+
+![classification loss curve](classify/others/classify-loss.png)
+
+## Benchmark
 Every example contains a image sized 256x256 and a text label.
 
-## big34w
+### dataset - 34w - 19 classes
  precision @ 1 = 0.994 ~ 0.997
-### train - label_for_train.dat
- about 300,000 case
-### test - label_for_test.dat
- about 40,000 case
 
-## small3k
-### train - label_for_train.dat
- about 2,000 case
-### test - label_for_test.dat
- about 1,000 case
+### dataset - 32w - 34 classes
+ precision @ 1 = 0.987 ~ 0.994
+
+
+# Localization
+Do localization work for 7 appearance class [23-29].
+
+@see localize directory
+
+## Model
+7 conv layer, 2 fully connected layer and 2 dropout op, ....
+
+Inputs of trainning is (image[256,256,3], box[4]).
+
+The target is a float vector [4], representing the offset in percent of 4 edge of object box (top, bottom, left, right). 
+
+The left-top corner is (0,0) and the right-bottom corner is (1,1).
+
+![localization accuracy curve](localize/others/localize-accuracy.png)
+
+## Benchmark
+*   MeanIOU = 0.90 ~ 0.91
+*   IOU = Intersection(Predict, GroundTruth) / Union(Prediction, GroundTruth)
 
 # HowToRun
-*   Install tensorflow with gpu support
-*   Clone: git clone carc19....
-*   SetWorkDir: 
-    > TFWORKDIR=/home/xxx/carc19_work/tmp  # your work dir
-    > mkdir -p $TFWORKDIR 
-*   ExtractData: 
-    > cd carc19/dataset/small3k 
-    > tar zxf image.tar.gz ;    # about 800MB
-    > mv carc19/dataset/small3k $TFWORKDIR/carc19
-*   Change working dir:
-    > cd carc19/model
-    > modify carc19.py: tf.app.flags.DEFINE_string('tf_home', '/home/xxx/carc19_work/tmp', ... 
+*   Install tensorflow (with gpu-support will speed up training task)
+*   Clone: git clone this-project
+*   WorkDir: 
+    * TFWORKDIR=/home/xxx/your-project/tmp  # your work dir
+    * mkdir -p $TFWORKDIR 
+*   Download and ExtractData to ${TFWORKDIR}/carc34: 
+    * ls ${TFWORKDIR}/carc34
+    *    label_for_test.dat label_for_train.dat box_for_test.dat box_for_train.dat image/
+*   Modify carc_flags (localize/classify): 
+    * tf_home: /home/xxx/your-project
 *   Train:
-    > python carc19_train.py   # run about 2hours
+    * python train.py
 *   Evaluate:
-    > python carc19_eval.py    # evaluate for precision
+    * python evaluate.py
+*   Export model named "frozen_custom.pb" to train_dir specified in carc_flags.py:
+    * python build_model.py
+
 
 # Reference
-  https://www.tensorflow.org/tutorials/deep_cnn
+* https://www.tensorflow.org/tutorials/deep_cnn
+* https://www.youtube.com/playlist?list=PLkt2uSq6rBVctENoVBg1TpCC7OQi31AlC&spfreload=10
 
-email: xiusir#qq.com
+# email
+* xiusir#qq.com

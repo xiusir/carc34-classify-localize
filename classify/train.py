@@ -41,25 +41,16 @@ import time
 
 import tensorflow as tf
 
-import carc19
+import model
 
 FLAGS = tf.app.flags.FLAGS
-
-tf.app.flags.DEFINE_string('train_dir', '%s/tmp/carc19_train' % FLAGS.tf_home,
-                           """Directory where to write event logs """
-                           """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 100000,
-                            """Number of batches to run.""")
-tf.app.flags.DEFINE_boolean('log_device_placement', False,
-                            """Whether to log device placement.""")
-tf.app.flags.DEFINE_integer('log_frequency', 10,
-                            """How often to log results to the console.""")
-
 
 def train():
   """Train CARC-19 for a number of steps."""
   with tf.Graph().as_default():
-    global_step = tf.contrib.framework.get_or_create_global_step()
+    tf.set_random_seed(int(time.time()))
+
+    ##global_step = tf.contrib.framework.get_or_create_global_step()
     ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
     global_step = tf.contrib.framework.get_or_create_global_step()
     if ckpt and ckpt.model_checkpoint_path:
@@ -69,18 +60,18 @@ def train():
       global_step_init = -1
 
     # Get images and labels for CARC-19.
-    images, labels = carc19.train_inputs()
+    images, labels = model.train_inputs()
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
-    logits = carc19.inference(images)
+    logits = model.inference(images)
 
     # Calculate loss.
-    loss = carc19.loss(logits, labels)
+    loss = model.loss(logits, labels)
 
     # Build a Graph that trains the model with one batch of examples and
     # updates the model parameters.
-    train_op = carc19.train(loss, global_step)
+    train_op = model.train(loss, global_step)
 
     class _LoggerHook(tf.train.SessionRunHook):
       """Logs loss and runtime."""
@@ -88,13 +79,18 @@ def train():
       def begin(self):
         self._step = global_step_init
         self._start_time = time.time()
+        self._saver = tf.train.Saver(max_to_keep=None)
+        self._sess = None
+
+      def after_create_session(self, session, coord):  # pylint: disable=unused-argument
+        self._sess = session
 
       def before_run(self, run_context):
         self._step += 1
         return tf.train.SessionRunArgs(loss)  # Asks for loss value.
 
       def after_run(self, run_context, run_values):
-        if self._step % FLAGS.log_frequency == 0:
+        if (self._step+1) % FLAGS.log_frequency == 0:
           current_time = time.time()
           duration = current_time - self._start_time
           self._start_time = current_time
@@ -105,12 +101,14 @@ def train():
 
           format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
-          print (format_str % (datetime.now(), self._step, loss_value,
+          print (format_str % (datetime.now(), self._step+1, loss_value,
                                examples_per_sec, sec_per_batch))
+        if (self._step+1) % FLAGS.save_frequency == 0:
+          self._saver.save(self._sess, "%s-model.ckpt-%s" % (FLAGS.train_dir_save, self._step+1))
 
     config = tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    config.gpu_options.per_process_gpu_memory_fraction = 0.7
 
     saver = tf.train.Saver()
     with tf.train.MonitoredTrainingSession(
@@ -118,6 +116,7 @@ def train():
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
                tf.train.NanTensorHook(loss),
                _LoggerHook()],
+        save_checkpoint_secs=3600,
         config=config) as mon_sess:
       ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
       if ckpt and ckpt.model_checkpoint_path:
@@ -128,7 +127,7 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
-  carc19.maybe_download_and_extract()
+  model.maybe_download_and_extract()
   ##if tf.gfile.Exists(FLAGS.train_dir):
   ##  tf.gfile.DeleteRecursively(FLAGS.train_dir)
   tf.gfile.MakeDirs(FLAGS.train_dir)

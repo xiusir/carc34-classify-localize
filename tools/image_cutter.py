@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # import the necessary packages
 from imutils import paths
+import math
 import argparse
 import cv2
 
@@ -44,11 +45,26 @@ for imagePath in paths.list_images(args["images"]):
     ### 灰度化
     ##gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ##fm = variance_of_laplacian(gray)
+    print (imagePath, image.shape)
 
     # CONSTANT 用颜色填充
     BLACK = [0,0,0]
     # top,bottom,left,right
-    image = cv2.copyMakeBorder(image,100,100,0,0,cv2.BORDER_CONSTANT,value=BLACK)
+    width = image.shape[1]
+    height = image.shape[0]
+
+    if width == 256 and height == 256:
+      print ("noaction %s" % imagePath)
+      continue
+
+
+    padding = (width - height) * 0.5
+    padding1 = math.ceil(padding)
+    padding2 = math.floor(padding)
+    if padding < 0:
+      print ("skip %s" % imagePath)
+      continue
+    image = cv2.copyMakeBorder(image,padding1,padding2,0,0,cv2.BORDER_CONSTANT,value=BLACK)
     # 缩放
     image = cv2.resize(image, (256, 256) , interpolation = cv2.INTER_AREA)
     ##img2 = cv2.resize(image, (128, 128) , interpolation = cv2.INTER_AREA)
@@ -62,5 +78,6 @@ for imagePath in paths.list_images(args["images"]):
     ##filename = imagePath.split('/')[-1]
     ##cv2.imwrite('train/%s' % filename, image)
     cv2.imwrite(imagePath, image)
+    print ("processed %s" % imagePath)
 
 

@@ -42,28 +42,15 @@ import time
 import numpy as np
 import tensorflow as tf
 
-import carc19
-from carc19_class import CARC19_CLASS
+import carc_flags
+import model
+from carc_class import CARC19_CLASS
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('eval_dir', '%s/tmp/carc19_eval' % FLAGS.tf_home,
-                           """Directory where to write event logs.""")
-tf.app.flags.DEFINE_string('eval_data', 'test',
-                           """Either 'test' or 'train_eval'.""")
-tf.app.flags.DEFINE_string('checkpoint_dir', '%s/tmp/carc19_train' % FLAGS.tf_home,
-                           """Directory where to read model checkpoints.""")
-tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
-                            """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 30,
-                            """Number of examples to run.""")
-tf.app.flags.DEFINE_boolean('run_once', True,
-                         """Whether to run eval only once.""")
 
-
-
-def eval_once(saver, summary_writer, top_k_op, summary_op):
-  """Run Eval once.
+def analyze_once(saver, summary_writer, summary_op, keys, boxes, logits, loss, step=None):
+  """Evaluate and analyze.
 
   Args:
     saver: Saver.
@@ -72,25 +59,21 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
     summary_op: Summary op.
   """
   with tf.Session() as sess:
-    ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
-    if ckpt and ckpt.model_checkpoint_path:
-      # Restores from checkpoint
-      saver.restore(sess, ckpt.model_checkpoint_path)
-      # Assuming model_checkpoint_path looks something like:
-      #   /my-favorite-path/carc19_train/model.ckpt-0,
-      # extract global_step from it.
-      global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+    if step is None:
+      ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+      if ckpt and ckpt.model_checkpoint_path:
+        # Restores from checkpoint
+        saver.restore(sess, ckpt.model_checkpoint_path)
+        # Assuming model_checkpoint_path looks something like:
+        #   /my-favorite-path/carc34_train/model.ckpt-0,
+        # extract global_step from it.
+        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+      else:
+        print('No checkpoint file found')
+        return
     else:
-      print('No checkpoint file found')
-      return
-
-    print ("---")
-    for n in tf.get_default_graph().as_graph_def().node:
-      print (n.name)
-    print ("---")
-    print (tf.get_default_graph().get_operation_by_name('images'))
-
-    return
+      saver.restore(sess, "%s-model.ckpt-%s" % (FLAGS.train_dir_save, step))
+      global_step = step
 
     # Start the queue runners.
     coord = tf.train.Coordinator()
@@ -101,22 +84,17 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
                                          start=True))
 
       num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
-      true_count = 0  # Counts the number of correct predictions.
-      total_sample_count = num_iter * FLAGS.batch_size
       step = 0
+      error_count = 0
+      avg_iou = 0.0
       while step < num_iter and not coord.should_stop():
-        predictions = sess.run([top_k_op])
-        true_count += np.sum(predictions)
-        step += 1
-
-      # Compute precision @ 1.
-      precision = true_count / total_sample_count
-      print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
-
-      summary = tf.Summary()
-      summary.ParseFromString(sess.run(summary_op))
-      summary.value.add(tag='Precision @ 1', simple_value=precision)
-      summary_writer.add_summary(summary, global_step)
+        boxes1, keys1, logits1, loss1 = sess.run([boxes, keys, logits, loss])
+        print("step: %s  [loss, iou, diff] = %s" % (global_step, str(loss1)))
+        avg_iou += loss1[1] / num_iter
+        for idx in range(len(keys1)):
+          print (u" %s | %s | %s" % (str(keys1[idx]), boxes1[idx], logits1[idx]))
+        step = step + 1
+      print ("average_iou = %.4lf" % avg_iou)
     except Exception as e:  # pylint: disable=broad-except
       coord.request_stop(e)
 
@@ -124,29 +102,25 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
     coord.join(threads, stop_grace_period_secs=10)
 
 
-def evaluate():
+def analyze(step=None):
   """Eval CARC-19 for a number of steps."""
   with tf.Graph().as_default() as g:
-    ##graph.get_tensor_by_name('your_new_name:0')
-
     # Get images and labels for CARC-19.
     eval_data = FLAGS.eval_data == 'test'
-    images, labels, keys = carc19.evaluate_inputs(eval_data=eval_data)
-
-    images = tf.identity(images, name='input')
+    keys, images, boxes = model.evaluate_inputs(eval_data=eval_data)
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
-    logits = carc19.inference(images)
-
-    logits = tf.identity(logits, name='output')
+    logits = model.inference(images, train=False)
+    loss = model.loss(logits, boxes)
+    #loss = model.difference_loss(logits, boxes)
+    #accuracy = model.iou(logits, boxes)
 
     # Calculate predictions.
-    top_k_op = tf.nn.in_top_k(logits, labels, 1)
+    #top_k_op = tf.nn.top_k(logits, k=1)
 
     # Restore the moving average version of the learned variables for eval.
-    variable_averages = tf.train.ExponentialMovingAverage(
-        carc19.MOVING_AVERAGE_DECAY)
+    variable_averages = tf.train.ExponentialMovingAverage(model.MOVING_AVERAGE_DECAY)
     variables_to_restore = variable_averages.variables_to_restore()
     saver = tf.train.Saver(variables_to_restore)
 
@@ -155,20 +129,38 @@ def evaluate():
 
     summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
 
-    while True:
-      eval_once(saver, summary_writer, top_k_op, summary_op)
-      if FLAGS.run_once:
-        break
-      time.sleep(FLAGS.eval_interval_secs)
-
+    analyze_once(saver, summary_writer, summary_op, keys, boxes, logits, loss, step=step)
 
 def main(argv=None):  # pylint: disable=unused-argument
-  carc19.maybe_download_and_extract()
+  model.maybe_download_and_extract()
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
-  evaluate()
+  ##analyze(20000)
+  ##analyze(40000)
+  ##analyze(60000)
+  ##analyze(80000)
+  ##analyze(100000)
+  ##analyze(120000)
+  ##analyze(140000)
+  ##analyze(160000)
+  ##analyze(180000)
+  ##analyze(200000)
+  ##analyze(220000)
+  ##analyze(240000)
+  ##analyze(260000)
+  ##analyze(280000)
+  ##analyze(300000)
+  ##analyze(320000)
+  ##analyze(340000)
+  ##analyze(360000)
+  ##analyze(380000)
+  ##analyze(400000)
+  ##analyze(420000)
+  ##analyze(440000)
+  ##analyze(460000)
 
+  analyze()
 
 if __name__ == '__main__':
   tf.app.run()

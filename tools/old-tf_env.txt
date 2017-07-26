@@ -1,0 +1,63 @@
+
+== cat /etc/issue ===============================================
+Linux XIUSIR-PC 4.8.0-54-generic #57~16.04.1-Ubuntu SMP Wed May 24 16:22:28 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+VERSION="16.04.2 LTS (Xenial Xerus)"
+VERSION_ID="16.04"
+VERSION_CODENAME=xenial
+
+== are we in docker =============================================
+No
+
+== compiler =====================================================
+c++ (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+== uname -a =====================================================
+Linux XIUSIR-PC 4.8.0-54-generic #57~16.04.1-Ubuntu SMP Wed May 24 16:22:28 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+
+== check pips ===================================================
+numpy (1.12.1)
+protobuf (3.3.0)
+tensorflow-gpu (1.1.0)
+
+== check for virtualenv =========================================
+True
+
+== tensorflow import ============================================
+tf.VERSION = 1.1.0
+tf.GIT_VERSION = v1.1.0-rc0-61-g1ec6ed5
+tf.COMPILER_VERSION = v1.1.0-rc0-61-g1ec6ed5
+Sanity check: array([1], dtype=int32)
+
+== env ==========================================================
+LD_LIBRARY_PATH /usr/local/cuda/lib64:/usr/local/cuda/lib64
+DYLD_LIBRARY_PATH is unset
+
+== nvidia-smi ===================================================
+Mon Jun 19 16:42:39 2017       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 375.39                 Driver Version: 375.39                    |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  GeForce GTX 106...  Off  | 0000:01:00.0      On |                  N/A |
+| 38%   34C    P0    28W / 130W |    372MiB /  6069MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID  Type  Process name                               Usage      |
+|=============================================================================|
+|    0      1076    G   /usr/lib/xorg/Xorg                             168MiB |
+|    0      2135    G   compiz                                         201MiB |
++-----------------------------------------------------------------------------+
+
+== cuda libs  ===================================================
+/usr/local/cuda-8.0/targets/x86_64-linux/lib/libcudart.so.8.0.61
+/usr/local/cuda-8.0/targets/x86_64-linux/lib/libcudart_static.a
+/usr/local/cuda-8.0/doc/man/man7/libcudart.so.7
+/usr/local/cuda-8.0/doc/man/man7/libcudart.7
