@@ -64,6 +64,13 @@ The left-top corner is (0,0) and the right-bottom corner is (1,1).
     * python evaluate.py
 *   Export model named "frozen_custom.pb" to train_dir specified in carc_flags.py:
     * python build_model.py
+*   Serving
+    * cd serving
+    * python web_classify.py &>web_classify.log &
+    * python web_localize.py &>web_localize.log &
+    * sh test.sh
+    * curl --compressed -v -F "images[]=@images/o_1bc4q9nfb1181222690274524715012536.jpg" -F "images[]=@images/o_1bf69iger15584463531465908144086.jpg"  http://localhost:5000/classify
+    * curl --compressed -v -F "images[]=@images/o_1bc4q9nfb1181222690274524715012536.jpg" -F "images[]=@images/o_1bf69iger15584463531465908144086.jpg"  http://localhost:5001/localiz
 
 
 # Reference

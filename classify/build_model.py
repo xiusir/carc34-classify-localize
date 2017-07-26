@@ -31,13 +31,21 @@ import model
 FLAGS = tf.app.flags.FLAGS
 
 MODEL = FLAGS.train_dir
+#MODEL = '/home/xiusir/WorkShop/TensorFlow/MySecondModel/tmp/carc34_train.10w.20170622'
 checkpoint_file = tf.train.latest_checkpoint(MODEL)
+EXPORT_FOR_MOBILE = False
 
 with tf.Graph().as_default() as graph:
-    
-    image = tf.placeholder(shape=[FLAGS.image_size, FLAGS.image_size, 3], dtype=tf.float32, name = FLAGS.input_node)
-    image0 = tf.cast(image, tf.float32)
-    images = tf.image.per_image_standardization(image0)
+    if EXPORT_FOR_MOBILE:
+      image = tf.placeholder(shape=[FLAGS.image_size, FLAGS.image_size, 3], dtype=tf.float32, name = FLAGS.input_node)
+      image0 = tf.cast(image, tf.float32)
+      images = tf.image.per_image_standardization(image0)
+    else:
+      data = tf.placeholder(dtype=tf.string, name=FLAGS.input_node)
+      image = tf.image.decode_jpeg(data, channels=3)
+      image = tf.reshape(image, [256, 256, 3])
+      image0 = tf.cast(image, tf.float32)
+      images = tf.image.per_image_standardization(image0)
 
     #with slim.arg_scope(inception_resnet_v2_arg_scope()):
     logits = model.inference(images)
@@ -48,7 +56,7 @@ with tf.Graph().as_default() as graph:
     #Setup graph def
     input_graph_def = graph.as_graph_def()
     output_node_names = FLAGS.output_node
-    output_graph_name = FLAGS.train_dir + '/' + FLAGS.export_model_file
+    output_graph_name = MODEL + '/' + FLAGS.export_model_file
 
     with tf.Session() as sess:
         saver.restore(sess, checkpoint_file)

@@ -21,7 +21,6 @@ from tensorflow.python.framework import tensor_shape
 from tensorflow.python.platform import gfile
 from tensorflow.python.util import compat
 
-MODEL_OUTPUT_TENSOR_NAME = 'softmax_linear/softmax_linear'
 MODEL_OUTPUT_TENSOR_NAME = 'output'
 
 
@@ -30,6 +29,7 @@ with tf.Graph().as_default() as graph:
     model_filename = os.path.join('.', 'image_preproc.pb')
     model_filename = os.path.join('.', 'bazel.pb')
     model_filename = os.path.join('.', 'frozen_custom.pb')
+    model_filename = os.path.join('../../MySecondModel/tmp/carc34_train.10w.20170622', 'frozen_custom.pb')
     with gfile.FastGFile(model_filename, 'rb') as f:
       graph_def = tf.GraphDef()
       graph_def.ParseFromString(f.read())
