@@ -52,11 +52,12 @@ FLAGS = tf.app.flags.FLAGS
 # ex. ${tf_home}/tmp/carc19/{label_for_test.dat,label_for_train.dat,image/...}
 # tf_home = /home/work/tensorflow
 # mkdir -p /home/work/tensorflow/tmp
-# mv small4w /home/work/tensorflow/tmp/carc19   
+# mv small4w /home/work/tensorflow/tmp/carc19
 # OR mv big34w /home/work/tensorflow/tmp/carc19
 # cd ???/carc19/model
 # python carc19_train.py
-tf.app.flags.DEFINE_string('tf_home', '/home/xiusir/WorkShop/TensorFlow/MyFirstModel',
+#tf.app.flags.DEFINE_string('tf_home', '/home/xiusir/WorkShop/TensorFlow/MyFirstModel',
+tf.app.flags.DEFINE_string('tf_home', '/Users/yangxiu/Workshop/TensorFlow/MyFirstTF/carc19/test/data',
                            """Basic path containing working directories, """
                            """as data_dir, eval_dir, checkpoint_dir, train_dir""")
 tf.app.flags.DEFINE_integer('batch_size', 32,

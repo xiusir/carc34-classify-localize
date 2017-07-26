@@ -55,71 +55,11 @@ tf.app.flags.DEFINE_string('checkpoint_dir', '%s/tmp/carc19_train' % FLAGS.tf_ho
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
                             """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 2,
+tf.app.flags.DEFINE_integer('num_examples', 30,
                             """Number of examples to run.""")
 tf.app.flags.DEFINE_boolean('run_once', True,
                          """Whether to run eval only once.""")
 
-
-def analyze_once(saver, summary_writer, top_k_op, summary_op, keys, labels, logits):
-  """Evaluate and analyze.
-
-  Args:
-    saver: Saver.
-    summary_writer: Summary writer.
-    top_k_op: Top K op.
-    summary_op: Summary op.
-  """
-  import sys
-  reload(sys)
-  sys.setdefaultencoding('utf-8')
-  with tf.Session() as sess:
-    ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
-    if ckpt and ckpt.model_checkpoint_path:
-      # Restores from checkpoint
-      saver.restore(sess, ckpt.model_checkpoint_path)
-      # Assuming model_checkpoint_path looks something like:
-      #   /my-favorite-path/carc19_train/model.ckpt-0,
-      # extract global_step from it.
-      global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-    else:
-      print('No checkpoint file found')
-      return
-
-    # Start the queue runners.
-    coord = tf.train.Coordinator()
-    try:
-      threads = []
-      for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS):
-        threads.extend(qr.create_threads(sess, coord=coord, daemon=True,
-                                         start=True))
-
-      num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
-      step = 0
-      error_count = 0
-      while step < num_iter and not coord.should_stop():
-        (values,indexs), targets, inputs, probabilities = sess.run([top_k_op,
-							  labels, keys, logits])
-        for idx in range(FLAGS.batch_size):
-          if targets[idx] != indexs[idx]:
-            error_count = error_count + 1
-            print ("====== %d ======" % idx)
-            pre_class = int(indexs[idx])
-            tar_class = int(targets[idx])
-            print (u"prediction: %d(%.3lf:%s)  target: %d(%.3lf:%s) file: %s" % (
-                   pre_class, probabilities[idx][pre_class], CARC19_CLASS[pre_class],
-                   tar_class, probabilities[idx][tar_class], CARC19_CLASS[tar_class],
-                   inputs[idx]))
-            print ("probabilities: %s" % (probabilities[idx]))
-        step += 1
-      print ("total error case: %d - total case: %d" % (error_count,
-      							FLAGS.num_examples))
-
-    except Exception as e:  # pylint: disable=broad-except
-      coord.request_stop(e)
-
-    coord.request_stop()
-    coord.join(threads, stop_grace_period_secs=10)
 
 
 def eval_once(saver, summary_writer, top_k_op, summary_op):
@@ -193,9 +133,13 @@ def evaluate():
     eval_data = FLAGS.eval_data == 'test'
     images, labels, keys = carc19.evaluate_inputs(eval_data=eval_data)
 
+    images = tf.identity(images, name='input')
+
     # Build a Graph that computes the logits predictions from the
     # inference model.
     logits = carc19.inference(images)
+
+    logits = tf.identity(logits, name='output')
 
     # Calculate predictions.
     top_k_op = tf.nn.in_top_k(logits, labels, 1)
@@ -217,41 +161,13 @@ def evaluate():
         break
       time.sleep(FLAGS.eval_interval_secs)
 
-def analyze():
-  """Eval CARC-19 for a number of steps."""
-  with tf.Graph().as_default() as g:
-    # Get images and labels for CARC-19.
-    eval_data = FLAGS.eval_data == 'test'
-    images, labels, keys = carc19.evaluate_inputs(eval_data=eval_data)
-
-    # Build a Graph that computes the logits predictions from the
-    # inference model.
-    logits = carc19.inference(images)
-
-    # Calculate predictions.
-    # top_k_op = tf.nn.in_top_k(logits, labels, 1)
-    top_k_op = tf.nn.top_k(logits, k=1)
-
-    # Restore the moving average version of the learned variables for eval.
-    variable_averages = tf.train.ExponentialMovingAverage(
-        carc19.MOVING_AVERAGE_DECAY)
-    variables_to_restore = variable_averages.variables_to_restore()
-    saver = tf.train.Saver(variables_to_restore)
-
-    # Build the summary operation based on the TF collection of Summaries.
-    summary_op = tf.summary.merge_all()
-
-    summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
-
-    analyze_once(saver, summary_writer, top_k_op, summary_op, keys, labels, logits)
 
 def main(argv=None):  # pylint: disable=unused-argument
   carc19.maybe_download_and_extract()
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
-  ##evaluate()
-  analyze()
+  evaluate()
 
 
 if __name__ == '__main__':
