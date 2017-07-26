@@ -18,10 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-"""Basic path containing working directories, """
-"""as data_dir, eval_dir, checkpoint_dir, train_dir"""
-tf_home = '/home/xiusir/WorkShop/TensorFlow/MySecondModel'
-
 import tensorflow as tf
 FLAGS = tf.app.flags.FLAGS
 
