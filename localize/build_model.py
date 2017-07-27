@@ -48,7 +48,7 @@ with tf.Graph().as_default() as graph:
       images = tf.image.per_image_standardization(image0)
 
     #with slim.arg_scope(inception_resnet_v2_arg_scope()):
-    logits = model.inference(images)
+    logits = model.inference(images, train=False)
     variable_averages = tf.train.ExponentialMovingAverage(model.MOVING_AVERAGE_DECAY)
     variables_to_restore = variable_averages.variables_to_restore()
     saver = tf.train.Saver(variables_to_restore)
