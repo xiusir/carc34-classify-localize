@@ -70,7 +70,7 @@ The left-top corner is (0,0) and the right-bottom corner is (1,1).
     * python web_localize.py &>web_localize.log &
     * sh test.sh
     * curl --compressed -v -F "images[]=@images/o_1bc4q9nfb1181222690274524715012536.jpg" -F "images[]=@images/o_1bf69iger15584463531465908144086.jpg"  http://localhost:5000/classify
-    * curl --compressed -v -F "images[]=@images/o_1bc4q9nfb1181222690274524715012536.jpg" -F "images[]=@images/o_1bf69iger15584463531465908144086.jpg"  http://localhost:5001/localiz
+    * curl --compressed -v -F "images[]=@images/o_1bc4q9nfb1181222690274524715012536.jpg" -F "images[]=@images/o_1bf69iger15584463531465908144086.jpg"  http://localhost:5001/localize
 
 
 # Reference

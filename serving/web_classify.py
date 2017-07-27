@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 import urllib.request
 
 import sys
@@ -24,6 +24,49 @@ tf.app.flags.DEFINE_string('input_node', 'input_image:0',
                             """Grapy input point""")
 tf.app.flags.DEFINE_string('output_node', 'output:0',
                             """Grapy output point""")
+
+
+def resize_image(data):
+    import tempfile
+    import math
+    import cv2
+
+    temp = tempfile.NamedTemporaryFile(suffix='.jpg')
+    temp.write(data)
+
+    imagePath = temp.name
+    image = cv2.imread(imagePath)
+
+    # CONSTANT 用颜色填充
+    BLACK = [0,0,0]
+    # top,bottom,left,right
+    width = image.shape[1]
+    height = image.shape[0]
+
+    if width == 256 and height == 256:
+      return data
+
+    padding = (width - height) * 0.5
+    padding1 = math.ceil(padding)
+    padding2 = math.floor(padding)
+    if padding < 0:
+      return data
+
+    image = cv2.copyMakeBorder(image,padding1,padding2,0,0,cv2.BORDER_CONSTANT,value=BLACK)
+    image = cv2.resize(image, (256, 256) , interpolation = cv2.INTER_AREA)
+
+    cv2.imwrite(imagePath, image)
+    temp.seek(0)
+    return temp.read()
+
+###TODO DEBUG
+###ff = 'images/o_1blp9bfc621457231430079257828839.jpg'
+###xx = open(ff, 'rb').read()
+###yy = resize_image(xx)
+###print (len(xx), len(yy))
+###exit(0)
+ 
+
 def load_label_strings():
     # retrieve labels
     labels = {}
@@ -42,7 +85,7 @@ def load_classify_model():
     
     config = tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.7
+    config.gpu_options.per_process_gpu_memory_fraction = 0.1
     sess = tf.Session(config=config)
     
     graph_def = tf.GraphDef()
@@ -75,6 +118,11 @@ def load_classify_model():
     ###print (time.time())
     #####sys.exit(0)
 
+def curl(url):
+    import urllib.request
+    resp=urllib.request.urlopen(url)
+    return resp.read()
+
 def load_localize_model():
     # load model data, get top_k
     if not os.path.isfile(FLAGS.localize_model_path):
@@ -83,7 +131,7 @@ def load_localize_model():
     
     config = tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.7
+    config.gpu_options.per_process_gpu_memory_fraction = 0.1
     sess = tf.Session(config=config)
     
     graph_def = tf.GraphDef()
@@ -127,12 +175,17 @@ def label():
 def api_classify():
     results = []
     ops = [top_values, top_indices]
-    ###for image in request.files.getlist("images[]"):
-    ###    app.logger.info("%s %s " % (image, type(image)))
-    ###return jsonify(results={'ok':len(request.files.getlist("images[]"))})
+    app.logger.info("%s %s %s " % (request, request.files, request.form))
+    images = []
     for image in request.files.getlist("images[]"):
         data = image.read()
-        #app.logger.info("%s %s" % (len(data), image.content_length))
+        data = resize_image(data)
+        images.append(data)
+    for url in request.form.getlist("images[]"):
+        data = curl(url)
+        data = resize_image(data)
+        images.append(data)
+    for data in images:
         values, indices = classify_sess.run(ops, feed_dict={FLAGS.input_node: data})
         top_k = []
         for i in range(FLAGS.top_k):
@@ -140,19 +193,34 @@ def api_classify():
                 'label': labels.get(str(indices.flatten().tolist()[i]), {}),
                 'value': values.flatten().tolist()[i],
             })
-        results.append({'top': top_k})
-    return jsonify(results=results)
+        results.append({'label': top_k})
+    response = jsonify(results=results)
+    response = make_response(jsonify(results=results))
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 @app.route('/localize', methods=['POST'])
 def api_localize():
     results = []
     ops = boxpos
+
+    images = []
     for image in request.files.getlist("images[]"):
         data = image.read()
+        data = resize_image(data)
+        images.append(data)
+    for url in request.form.getlist("images[]"):
+        data = curl(url)
+        data = resize_image(data)
+        images.append(data)
+    for data in images:
         box = localize_sess.run(ops, feed_dict={FLAGS.input_node: data})
         app.logger.info("%s %s " % (box, type(box)))
         results.append({'boxpos': box.tolist()})
-    return jsonify(results=results)
+    response = jsonify(results=results)
+    response = make_response(jsonify(results=results))
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 
