@@ -66,6 +66,14 @@ def train():
     # inference model.
     logits = model.inference(images)
 
+    # Calculate predictions.
+    top_k_op = tf.nn.in_top_k(logits, labels, 1)
+    top_k_op = tf.cast(top_k_op, tf.int32)
+    true_count = tf.reduce_sum(top_k_op)
+    true_count = tf.cast(true_count, tf.float32)
+    accuracy = tf.div(true_count, FLAGS.batch_size)
+    tf.summary.scalar('accuracy', accuracy) 
+
     # Calculate loss.
     loss = model.loss(logits, labels)
 
@@ -87,7 +95,7 @@ def train():
 
       def before_run(self, run_context):
         self._step += 1
-        return tf.train.SessionRunArgs(loss)  # Asks for loss value.
+        return tf.train.SessionRunArgs([loss, accuracy])  # Asks for loss value.
 
       def after_run(self, run_context, run_values):
         if (self._step+1) % FLAGS.log_frequency == 0:
@@ -95,20 +103,20 @@ def train():
           duration = current_time - self._start_time
           self._start_time = current_time
 
-          loss_value = run_values.results
+          loss_value, accuracy_value = run_values.results
           examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
           sec_per_batch = float(duration / FLAGS.log_frequency)
 
-          format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, (loss,accuracy) = (%.2f, %.4f%%) (%.1f examples/sec; %.3f '
                         'sec/batch)')
-          print (format_str % (datetime.now(), self._step+1, loss_value,
+          print (format_str % (datetime.now(), self._step+1, loss_value, accuracy_value,
                                examples_per_sec, sec_per_batch))
         if (self._step+1) % FLAGS.save_frequency == 0:
           self._saver.save(self._sess, "%s-model.ckpt-%s" % (FLAGS.train_dir_save, self._step+1))
 
     config = tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.7
+    config.gpu_options.per_process_gpu_memory_fraction = 0.9
 
     saver = tf.train.Saver()
     with tf.train.MonitoredTrainingSession(
@@ -116,7 +124,7 @@ def train():
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
                tf.train.NanTensorHook(loss),
                _LoggerHook()],
-        save_checkpoint_secs=3600,
+        save_checkpoint_secs=600,
         config=config) as mon_sess:
       ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
       if ckpt and ckpt.model_checkpoint_path:

@@ -33,7 +33,7 @@ tf.app.flags.DEFINE_string('tf_home', tf_home,
                            """as data_dir, eval_dir, checkpoint_dir, train_dir""")
 tf.app.flags.DEFINE_integer('image_size', 256, """256x256""")
 tf.app.flags.DEFINE_integer('num_classes', 34, """number of classes""")
-tf.app.flags.DEFINE_integer('batch_size', 2,
+tf.app.flags.DEFINE_integer('batch_size', 90,
                             """Number of images to process in a batch during train and evaluate.""")
 tf.app.flags.DEFINE_boolean('use_fp16', False,
                             """Train the model using fp16.""")
@@ -43,7 +43,7 @@ tf.app.flags.DEFINE_string('data_dir', '%s/tmp/carc34/' % tf_home,
 ############################
 ### training parameters
 ############################
-tf.app.flags.DEFINE_integer('train_size', 293828, """number of examples for training""")
+tf.app.flags.DEFINE_integer('train_size', 293791, """number of examples for training""")
 tf.app.flags.DEFINE_integer('max_steps', 1000000, """Number of batches to run.""")
 tf.app.flags.DEFINE_string('train_dir', '%s/tmp/carc34_train.classify' % tf_home,
                            """Directory where to write event logs """
@@ -55,11 +55,11 @@ tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
 tf.app.flags.DEFINE_integer('log_frequency', 50,
                             """How often to log results to the console.""")
-tf.app.flags.DEFINE_integer('save_frequency', 20000,
+tf.app.flags.DEFINE_integer('save_frequency', 50000,
                             """How often to checkpoint to the disk.""")
 tf.app.flags.DEFINE_float('moving_average_decay', 0.9999,
                             """The decay to use for the moving average.""")
-tf.app.flags.DEFINE_float('num_epochs_per_decay', 50,
+tf.app.flags.DEFINE_float('num_epochs_per_decay', 10,
                             """The decay to use for the moving average.""")
 tf.app.flags.DEFINE_float('learning_rate_decay_factor', 0.9,
                             """Learning rate decay factor.""")
@@ -69,7 +69,7 @@ tf.app.flags.DEFINE_float('initial_learning_rate', 0.001,
 ############################
 ### evaluation parameters
 ############################
-tf.app.flags.DEFINE_integer('num_examples', 8, 
+tf.app.flags.DEFINE_integer('num_examples', 32691, 
                             """number of examples for evaluating""")
 tf.app.flags.DEFINE_string('eval_data', 'test',
                            """Either 'test' or 'train_eval'.""")
@@ -90,5 +90,6 @@ tf.app.flags.DEFINE_string('input_node', 'input_image',
                            """Input node for exported model""")
 tf.app.flags.DEFINE_string('output_node', 'output',
                            """Output node for exported model""")
-tf.app.flags.DEFINE_string('export_model_file', 'frozen_custom.pb',
+tf.app.flags.DEFINE_string('export_model_file', 'frozen_custom_for_classify.pb',
                            """File name for exported model""")
+

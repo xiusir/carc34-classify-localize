@@ -31,8 +31,9 @@ import model
 FLAGS = tf.app.flags.FLAGS
 
 MODEL = FLAGS.train_dir
-#MODEL = '/home/xiusir/WorkShop/TensorFlow/MySecondModel/tmp/carc34_train'
 checkpoint_file = tf.train.latest_checkpoint(MODEL)
+
+#TODO Export model file for android/ios devices
 EXPORT_FOR_MOBILE = False
 
 with tf.Graph().as_default() as graph:
@@ -56,7 +57,10 @@ with tf.Graph().as_default() as graph:
     #Setup graph def
     input_graph_def = graph.as_graph_def()
     output_node_names = FLAGS.output_node
-    output_graph_name = MODEL + '/' + FLAGS.export_model_file
+    if EXPORT_FOR_MOBILE:
+        output_graph_name = MODEL + '/app_' + FLAGS.export_model_file
+    else:
+        output_graph_name = MODEL + '/' + FLAGS.export_model_file
 
     with tf.Session() as sess:
         saver.restore(sess, checkpoint_file)

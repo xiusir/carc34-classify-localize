@@ -69,7 +69,7 @@ tf.app.flags.DEFINE_float('initial_learning_rate', 0.001,
 ############################
 ### evaluation parameters
 ############################
-tf.app.flags.DEFINE_integer('num_examples', 32,  #2836
+tf.app.flags.DEFINE_integer('num_examples', 2836,  #2836
                             """number of examples for evaluating""")
 tf.app.flags.DEFINE_string('eval_data', 'test',
                            """Either 'test' or 'train_eval'.""")

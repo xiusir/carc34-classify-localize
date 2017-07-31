@@ -44,7 +44,9 @@ The left-top corner is (0,0) and the right-bottom corner is (1,1).
 ![localization accuracy curve](localize/others/localize-accuracy.png)
 
 ## Benchmark
-*   MeanIOU = 0.90 ~ 0.91
+*   MeanIOU = 0.9183
+*   2836   examples in boxpos_for_test.dat
+    25427  examples in boxpos_for_train.dat
 *   IOU = Intersection(Predict, GroundTruth) / Union(Prediction, GroundTruth)
 
 # HowToRun

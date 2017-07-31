@@ -74,6 +74,8 @@ INITIAL_LEARNING_RATE = FLAGS.initial_learning_rate                 # Initial le
 # names of the summaries when visualizing a model.
 TOWER_NAME = 'tower'
 
+KEEP_PROB = 0.5
+
 
 
 def _activation_summary(x):
@@ -191,7 +193,7 @@ def evaluate_inputs(eval_data):
   return images, labels, keys
 
 
-def inference(images):
+def inference(images, train=True):
   """Build the CARC-19 model.
 
   Args:
@@ -228,6 +230,8 @@ def inference(images):
   # norm1
   norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
                     name='norm1')
+  if train:
+    norm1 = tf.nn.dropout(norm1, KEEP_PROB)
 
   # conv2
   with tf.variable_scope('conv2') as scope:
@@ -319,6 +323,9 @@ def inference(images):
     biases = _variable_on_cpu('biases', [1024], tf.constant_initializer(0.1))
     local6 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name=scope.name)
     _activation_summary(local6)
+
+  if train:
+    local6 = tf.nn.dropout(local6, KEEP_PROB)
 
   #### local7
   ###with tf.variable_scope('local7') as scope:
